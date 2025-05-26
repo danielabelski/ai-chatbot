@@ -1,4 +1,4 @@
-# 🧠 Personal AI Chatbot with Document Q&A and Voice Support
+# Personal AI Chatbot with Document Q&A and Voice Support
 
 A fully local, privacy-focused AI chatbot built with **LangChain**, **Ollama**, and **Streamlit**, designed to function as a personal assistant with voice interaction and document understanding.
 
@@ -19,7 +19,7 @@ A fully local, privacy-focused AI chatbot built with **LangChain**, **Ollama**, 
 - **🎙️ Voice Input & Output**  
   Use your microphone for speech-to-text and hear the bot reply via text-to-speech. Toggle from the sidebar.
 
-- **🧠 Configurable Personality**  
+- **Configurable Personality**  
   Customise the assistant’s tone and behavior via a system prompt field in the sidebar.
 
 ---
