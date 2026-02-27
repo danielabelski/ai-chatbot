@@ -1,36 +1,69 @@
-from langchain_ollama import ChatOllama
+import argparse
+
+from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
-from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_ollama import ChatOllama
 
-llm = ChatOllama(model="mistral:7b")
+from app_config import DEFAULT_CHAT_MODEL, get_python_compatibility_message, resolve_ollama_settings
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Terminal chatbot with local/remote Ollama support.")
+    parser.add_argument("--target", choices=["local", "remote"], default="local")
+    parser.add_argument("--remote-url", default="", help="Remote Ollama URL when --target remote")
+    parser.add_argument("--model", default=DEFAULT_CHAT_MODEL, help="Chat model name")
+    return parser.parse_args()
+
+
+args = parse_args()
+ollama_settings = resolve_ollama_settings(
+    target=args.target,
+    remote_url=args.remote_url,
+    chat_model=args.model,
+)
+
+python_warning = get_python_compatibility_message()
+if python_warning:
+    print(f"[compat] {python_warning}")
+
+print(
+    f"[ollama] target={ollama_settings.target} base_url={ollama_settings.base_url} "
+    f"model={ollama_settings.chat_model}"
+)
+
+llm = ChatOllama(model=ollama_settings.chat_model, base_url=ollama_settings.base_url)
 
 system_message = SystemMessage(
     content="You are a helpful, witty, and concise personal assistant who speaks in a friendly tone."
 )
 
-prompt = ChatPromptTemplate.from_messages([
-    system_message,
-    MessagesPlaceholder(variable_name="history"),  
-    HumanMessage(content="{input}")
-])
+prompt = ChatPromptTemplate.from_messages(
+    [
+        system_message,
+        MessagesPlaceholder(variable_name="history"),
+        HumanMessage(content="{input}"),
+    ]
+)
 
 session_histories = {}
+
 
 def get_session_history(session_id: str):
     if session_id not in session_histories:
         session_histories[session_id] = InMemoryChatMessageHistory()
     return session_histories[session_id]
 
+
 chatbot = RunnableWithMessageHistory(
     prompt | llm,
     get_session_history=get_session_history,
-    input_messages_key="input",     
-    history_messages_key="history"  
+    input_messages_key="input",
+    history_messages_key="history",
 )
 
-print("🤖 Your Personal Chatbot (type 'exit' to quit)\n")
+print("Your Personal Chatbot (type 'exit' to quit)\n")
 
 while True:
     user_input = input("You: ")
